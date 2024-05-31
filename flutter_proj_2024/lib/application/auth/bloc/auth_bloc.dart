@@ -16,7 +16,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     try {
       final result = await authRepository.login(event.email, event.password);
       final token = result?['token'];
-      emit(AuthSuccess(token: token));
+      final role = result?['role'];
+      if (token != null && role != null) {
+        emit(AuthSuccess(token: token, role: role));
+      } else {
+        emit(AuthFailure(errorMessage: 'Invalid login response'));
+      }
     } catch (e) {
       print('Login error: $e'); // Log error
       emit(AuthFailure(errorMessage: e.toString()));
@@ -28,7 +33,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     try {
       final result = await authRepository.signup(event.name, event.email, event.password, event.isAdmin);
       final token = result?['token'];
-      emit(AuthSuccess(token: token));
+      final role = result?['role'];
+      if (token != null && role != null) {
+        emit(AuthSuccess(token: token, role: role));
+      } else {
+        emit(AuthFailure(errorMessage: 'Invalid signup response'));
+      }
     } catch (e) {
       print('Signup error: $e'); // Log error
       emit(AuthFailure(errorMessage: e.toString()));

@@ -5,14 +5,20 @@ import 'package:flutter_proj_2024/application/auth/bloc/auth_event.dart';
 import 'package:flutter_proj_2024/application/auth/bloc/auth_state.dart';
 import 'package:flutter_proj_2024/shared/widgets/text_field_widget.dart';
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
+
+  @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
     Size screenSize = MediaQuery.of(context).size;
-    final TextEditingController emailController = TextEditingController();
-    final TextEditingController passwordController = TextEditingController();
 
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 252, 241, 230),
@@ -43,9 +49,17 @@ class LoginPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 30),
-            TextFieldWidget(hintText: "Email", obscure: false, controller: emailController),
+            TextFieldWidget(
+              hintText: "Email",
+              obscure: false,
+              controller: _emailController,
+            ),
             const SizedBox(height: 30),
-            TextFieldWidget(hintText: 'Password', obscure: true, controller: passwordController),
+            TextFieldWidget(
+              hintText: 'Password',
+              obscure: true,
+              controller: _passwordController,
+            ),
             const SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -78,7 +92,16 @@ class LoginPage extends StatelessWidget {
             BlocConsumer<AuthBloc, AuthState>(
               listener: (context, state) {
                 if (state is AuthSuccess) {
-                  Navigator.pushNamed(context, '/');
+                  print('Navigating based on role: ${state.role}');
+                  if (state.role == 'admin') {
+                    Navigator.pushNamed(context, '/admin_page');
+                  } else if (state.role == 'customer') {
+                    Navigator.pushNamed(context, '/booking_page');
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('This account doesn\'t exist')),
+                    );
+                  }
                 } else if (state is AuthFailure) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('Login Failed: ${state.errorMessage}')),
@@ -90,17 +113,18 @@ class LoginPage extends StatelessWidget {
                   onPressed: state is AuthLoading
                       ? null
                       : () {
-                          final email = emailController.text;
-                          final password = passwordController.text;
-
+                          final email = _emailController.text;
+                          final password = _passwordController.text;
                           context.read<AuthBloc>().add(LoginRequested(email: email, password: password));
                         },
+                  style: ButtonStyle(
+                    backgroundColor: MaterialStateProperty.all<Color>(
+                      const Color.fromARGB(255, 93, 64, 50),
+                    ),
+                  ),
                   child: state is AuthLoading
                       ? const CircularProgressIndicator(color: Colors.white)
                       : const Text('L O G I N', style: TextStyle(color: Colors.white)),
-                  style: ButtonStyle(
-                    backgroundColor: MaterialStateProperty.all<Color>(const Color.fromARGB(255, 93, 64, 50)),
-                  ),
                 );
               },
             ),

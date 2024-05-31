@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:jwt_decoder/jwt_decoder.dart';
 
 class AuthApi {
   final String baseUrl;
@@ -13,15 +14,20 @@ class AuthApi {
       body: jsonEncode(<String, String>{'email': email, 'password': password}),
     );
 
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body) as Map<String, dynamic>;
+    print('Login response status: ${response.statusCode}');
+    print('Login response body: ${response.body}');
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      Map<String, dynamic> responseBody = jsonDecode(response.body);
+      String token = responseBody['token'];
+      Map<String, dynamic> decodedToken = JwtDecoder.decode(token);
+      return {'token': token, 'role': decodedToken['role']};
     } else {
-      throw Exception('Failed to login');
+      throw Exception('Failed to login: ${response.statusCode} - ${response.body}');
     }
   }
 
   Future<Map<String, dynamic>?> signup(String name, String email, String password, bool isAdmin) async {
-    print('Signup request: $name, $email, $password, $isAdmin'); // Log request data
     final response = await http.post(
       Uri.parse('$baseUrl/auth/signup'),
       headers: <String, String>{'Content-Type': 'application/json'},
@@ -33,11 +39,14 @@ class AuthApi {
       }),
     );
 
-    print('Signup response status: ${response.statusCode}'); // Log response status
-    print('Signup response body: ${response.body}'); // Log response body
+    print('Signup response status: ${response.statusCode}');
+    print('Signup response body: ${response.body}');
 
     if (response.statusCode == 201) {
-      return jsonDecode(response.body) as Map<String, dynamic>;
+      Map<String, dynamic> responseBody = jsonDecode(response.body);
+      String token = responseBody['token'];
+      Map<String, dynamic> decodedToken = JwtDecoder.decode(token);
+      return {'token': token, 'role': decodedToken['role']};
     } else {
       throw Exception('Failed to sign up: ${response.statusCode} - ${response.body}');
     }

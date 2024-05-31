@@ -3,8 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_proj_2024/shared/widgets/appbar.dart';
 import 'package:flutter_proj_2024/shared/widgets/drawer.dart';
 import 'package:flutter_proj_2024/domain/booking/entities/booking.dart';
-
-// import 'package:hotel_booking/presentation/test_input/datas.dart';
 import 'package:flutter_proj_2024/application/booking/bloc/booking_bloc.dart';
 import 'package:flutter_proj_2024/application/booking/bloc/booking_event.dart';
 import 'package:flutter_proj_2024/application/booking/bloc/booking_state.dart';
@@ -12,27 +10,25 @@ import 'package:flutter_proj_2024/infrastructure/booking/data_sources/booking_lo
 import 'package:flutter_proj_2024/infrastructure/booking/repositories/booking_repository_impl.dart';
 import 'package:mongo_dart/mongo_dart.dart' as mongo;
 
-
 class BookingPage extends StatelessWidget {
-   BookingPage({Key? key}) : super(key: key);
+  BookingPage({Key? key}) : super(key: key);
 
   final List<Map<String, dynamic>> categories = [
     {
       'title': 'Deluxe Room',
-      'images': ['lib/images/deluxe_room_1.jpg', 'lib/images/deluxe_room_2.jpg'],
+      'images': ['lib/assets/images/vip1.jpeg', 'lib/assets/images/vip2.jpeg'],
       'descriptions': ['A luxurious room with a great view.', 'Spacious and comfortable.'],
       'prices': [120, 150]
     },
-    
   ];
-  @override
 
+  @override
   Widget build(BuildContext context) {
     final db = mongo.Db('mongodb://your_mongo_db_url');
     final bookingCollection = db.collection('bookings');
     final bookingLocalDataSource = BookingLocalDataSource(bookingCollection);
     final bookingRepository = BookingRepositoryImpl(bookingLocalDataSource);
-   
+
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 252, 241, 230),
       appBar: AppAppBar(),
@@ -74,7 +70,7 @@ class BookingPage extends StatelessWidget {
 
   Widget _buildCard(BuildContext context, Map<String, dynamic> category, int index) {
     return Card(
-      margin:const EdgeInsets.symmetric(horizontal: 40),
+      margin: const EdgeInsets.symmetric(horizontal: 40),
       color: const Color.fromARGB(255, 244, 229, 212),
       elevation: 5.0,
       shape: RoundedRectangleBorder(
@@ -95,7 +91,8 @@ class BookingPage extends StatelessWidget {
             Text(
               '${category['descriptions'][index]}',
               textAlign: TextAlign.center,
-              style:const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Color.fromARGB(255, 95, 65, 65)),
+              style: const TextStyle(
+                  fontWeight: FontWeight.bold, fontSize: 18, color: Color.fromARGB(255, 95, 65, 65)),
             ),
             Text(
               'Price: \$${category['prices'][index]}',
@@ -135,7 +132,7 @@ class BookingPage extends StatelessWidget {
       lastDate: DateTime.now().add(Duration(days: 365)),
     );
 
-    if (selectedDate != null) { 
+    if (selectedDate != null) {
       context.read<BookingBloc>().add(SelectDateEvent(selectedDate));
       _showConfirmationDialog(context, category, index, selectedDate);
     }

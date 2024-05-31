@@ -11,11 +11,12 @@ class AuthLoading extends AuthState {}
 
 class AuthSuccess extends AuthState {
   final String token;
+  final String role;
 
-  AuthSuccess({required this.token});
+  AuthSuccess({required this.token, required this.role});
 
   @override
-  List<Object> get props => [token];
+  List<Object> get props => [token, role];
 }
 
 class AuthFailure extends AuthState {
