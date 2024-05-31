@@ -1,18 +1,28 @@
-abstract class AuthEvent {}
+import 'package:equatable/equatable.dart';
 
-class SignUpEvent extends AuthEvent {
-  final Map<String, String> signUpDto;
-  SignUpEvent(this.signUpDto);
+abstract class AuthEvent extends Equatable {
+  @override
+  List<Object> get props => [];
 }
 
-class LoginEvent extends AuthEvent {
-  final Map<String, String> loginDto;
-  LoginEvent(this.loginDto);
+class LoginRequested extends AuthEvent {
+  final String email;
+  final String password;
+
+  LoginRequested({required this.email, required this.password});
+
+  @override
+  List<Object> get props => [email, password];
 }
 
-class CheckAuthEvent extends AuthEvent {
-  final String? token;
-  CheckAuthEvent(this.token);
-}
+class SignUpRequested extends AuthEvent {
+  final String name;
+  final String email;
+  final String password;
+  final bool isAdmin;
 
-class LogoutEvent extends AuthEvent {}
+  SignUpRequested({required this.name, required this.email, required this.password, required this.isAdmin});
+
+  @override
+  List<Object> get props => [name, email, password, isAdmin];
+}

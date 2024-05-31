@@ -5,7 +5,7 @@ class SignUp {
 
   SignUp(this.repository);
 
-  Future<Map<String, String>> call(Map<String, String> signUpDto) {
-    return repository.signUp(signUpDto);
+  Future<Map<String, dynamic>?> call(String name, String email, String password, bool isAdmin) {
+    return repository.signup(name, email, password, isAdmin);
   }
 }

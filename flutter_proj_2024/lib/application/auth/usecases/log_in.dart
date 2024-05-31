@@ -5,7 +5,7 @@ class Login {
 
   Login(this.repository);
 
-  Future<Map<String, dynamic>?> call(Map<String, String> loginDto) {
-    return repository.login(loginDto);
+  Future<Map<String, dynamic>?> call(String email, String password) {
+    return repository.login(email, password);
   }
 }

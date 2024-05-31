@@ -1,54 +1,37 @@
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'auth_event.dart';
-import 'auth_state.dart';
+import 'package:bloc/bloc.dart';
+import 'package:flutter_proj_2024/application/auth/bloc/auth_event.dart';
+import 'package:flutter_proj_2024/application/auth/bloc/auth_state.dart';
 import 'package:flutter_proj_2024/domain/auth/repositories/auth_repository.dart';
-import 'package:flutter_proj_2024/application/auth/usecases/log_in.dart';
-import 'package:flutter_proj_2024/application/auth/usecases/sign_up.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final AuthRepository authRepository;
 
-  AuthBloc(this.authRepository) : super(AuthInitial());
+  AuthBloc({required this.authRepository}) : super(AuthInitial()) {
+    on<LoginRequested>(_onLoginRequested);
+    on<SignUpRequested>(_onSignUpRequested);
+  }
 
-  @override
-  Stream<AuthState> mapEventToState(AuthEvent event) async* {
-    if (event is SignUpEvent) {
-      yield AuthLoading();
-      try {
-        final signUp = SignUp(authRepository);
-        final token = await signUp(event.signUpDto);
-        yield AuthAuthenticated(token: token['token']!);
-      } catch (e) {
-        yield AuthError(message: e.toString());
-      }
-    } else if (event is LoginEvent) {
-      yield AuthLoading();
-      try {
-        final login = Login(authRepository);
-        final response = await login(event.loginDto);
-        if (response != null) {
-          yield AuthAuthenticated(token: response['token']);
-        } else {
-          yield AuthError(message: 'Invalid email or password');
-        }
-      } catch (e) {
-        yield AuthError(message: e.toString());
-      }
-    } else if (event is CheckAuthEvent) {
-      yield AuthLoading();
-      try {
-        final isAuthenticated = await authRepository.isAuthenticated(event.token);
-        if (isAuthenticated) {
-          yield AuthAuthenticated(token: event.token!);
-        } else {
-          yield AuthUnauthenticated();
-        }
-      } catch (e) {
-        yield AuthError(message: e.toString());
-      }
-    } else if (event is LogoutEvent) {
-      await authRepository.signOut();
-      yield AuthUnauthenticated();
+  void _onLoginRequested(LoginRequested event, Emitter<AuthState> emit) async {
+    emit(AuthLoading());
+    try {
+      final result = await authRepository.login(event.email, event.password);
+      final token = result?['token'];
+      emit(AuthSuccess(token: token));
+    } catch (e) {
+      print('Login error: $e'); // Log error
+      emit(AuthFailure(errorMessage: e.toString()));
+    }
+  }
+
+  void _onSignUpRequested(SignUpRequested event, Emitter<AuthState> emit) async {
+    emit(AuthLoading());
+    try {
+      final result = await authRepository.signup(event.name, event.email, event.password, event.isAdmin);
+      final token = result?['token'];
+      emit(AuthSuccess(token: token));
+    } catch (e) {
+      print('Signup error: $e'); // Log error
+      emit(AuthFailure(errorMessage: e.toString()));
     }
   }
 }

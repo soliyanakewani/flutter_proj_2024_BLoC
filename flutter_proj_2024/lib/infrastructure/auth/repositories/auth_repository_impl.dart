@@ -1,38 +1,18 @@
 import 'package:flutter_proj_2024/domain/auth/repositories/auth_repository.dart';
-import 'package:flutter_proj_2024/infrastructure/auth/sevices/auth_service.dart';
+import 'package:flutter_proj_2024/infrastructure/auth/data_sources/auth_api.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
-  final AuthService authService;
+  final AuthApi authApi;
 
-  AuthRepositoryImpl(this.authService);
+  AuthRepositoryImpl({required this.authApi});
 
   @override
-  Future<Map<String, String>> signUp(Map<String, String> signUpDto) {
-    return authService.signUp(signUpDto);
+  Future<Map<String, dynamic>?> login(String email, String password) async {
+    return await authApi.login(email, password);
   }
 
   @override
-  Future<Map<String, dynamic>?> login(Map<String, String> loginDto) {
-    return authService.login(loginDto);
-  }
-
-  @override
-  Future<bool> isAuthenticated(String? token) {
-    return authService.isAuthenticated(token);
-  }
-
-  @override
-  Future<Map<String, dynamic>> getCurrentUser(String token) {
-    return authService.getCurrentUser(token);
-  }
-
-  @override
-  Future<void> signOut() {
-    return authService.signOut();
-  }
-
-  @override
-  Future<String?> getToken() {
-    return authService.getToken();
+  Future<Map<String, dynamic>?> signup(String name, String email, String password, bool isAdmin) async {
+    return await authApi.signup(name, email, password, isAdmin);
   }
 }
