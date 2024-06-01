@@ -1,18 +1,20 @@
+import 'package:flutter_proj_2024/domain/room/room.dart';
+
 abstract class AdminEvent {}
 
 class LoadItemsEvent extends AdminEvent {}
 
 class AddItemEvent extends AdminEvent {
-  final Map<String, dynamic> item;
-  AddItemEvent(this.item);
+  final Room room;
+  AddItemEvent(this.room);
 }
 
 class UpdateItemEvent extends AdminEvent {
-  final Map<String, dynamic> item;
-  UpdateItemEvent(this.item);
+  final Room room;
+  UpdateItemEvent(this.room);
 }
 
 class DeleteItemEvent extends AdminEvent {
-  final String itemId;
-  DeleteItemEvent(this.itemId);
+  final String roomId;
+  DeleteItemEvent(this.roomId);
 }

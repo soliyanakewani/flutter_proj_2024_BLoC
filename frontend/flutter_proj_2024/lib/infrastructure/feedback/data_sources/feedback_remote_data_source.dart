@@ -1,34 +1,54 @@
-import 'dart:convert';
+import 'package:flutter_proj_2024/domain/feedback/entities/feedback.dart';
 import 'package:http/http.dart' as http;
-import 'package:flutter_proj_2024/domain/feedback/entities/feedback.dart' as CustomFeedback;
+import 'dart:convert';
 
 class FeedbackRemoteDataSource {
-  final String baseUrl = 'http://localhost:3000/feedback'; // Replace with your actual backend URL
+  final String baseUrl;
 
-  Future<void> submitFeedback(CustomFeedback.Feedback feedback) async {
-    final response = await http.post(
-      Uri.parse(baseUrl),
-      headers: <String, String>{
-        'Content-Type': 'application/json; charset=UTF-8',
-      },
-      body: jsonEncode(<String, dynamic>{
-        'customerName': feedback.customerName,
-        'message': feedback.message,
-        'rating': feedback.rating,
-      }),
-    );
-    if (response.statusCode != 200) {
-      throw Exception('Failed to submit feedback');
+  FeedbackRemoteDataSource(this.baseUrl);
+
+  Future<List<AppFeedback>> fetchFeedback() async {
+    final response = await http.get(Uri.parse('$baseUrl/feedback'));
+
+    if (response.statusCode == 200) {
+      List<dynamic> data = json.decode(response.body);
+      return data.map((json) => AppFeedback.fromJson(json)).toList();
+    } else {
+      throw Exception('Failed to load feedback');
     }
   }
 
-  Future<List<CustomFeedback.Feedback>> getFeedbackList() async {
-    final response = await http.get(Uri.parse(baseUrl));
-    if (response.statusCode == 200) {
-      final List<dynamic> feedbackData = jsonDecode(response.body);
-      return feedbackData.map((json) => CustomFeedback.Feedback.fromJson(json)).toList();
-    } else {
-      throw Exception('Failed to load feedback list');
+  Future<void> postFeedback(AppFeedback feedback) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/feedback'),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode(feedback.toJson()),
+    );
+
+    if (response.statusCode != 201) {
+      throw Exception('Failed to post feedback');
+    }
+  }
+
+  Future<void> updateFeedback(AppFeedback feedback) async {
+    final response = await http.put(
+      Uri.parse('$baseUrl/feedback/${feedback.id}'),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode(feedback.toJson()),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to update feedback');
+    }
+  }
+
+  Future<void> deleteFeedback(String feedbackId) async {
+    final response = await http.delete(
+      Uri.parse('$baseUrl/feedback/$feedbackId'),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to delete feedback');
     }
   }
 }

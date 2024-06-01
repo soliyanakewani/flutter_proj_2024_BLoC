@@ -21,7 +21,7 @@ export class CreateRoomDto {
     @IsEmpty({ message: 'You cannot pass user ID.' })
     readonly user: User;
 
-    @IsNotEmpty()
+    @IsOptional()
     @IsString()
     readonly image: string;  // Validate image as a non-empty string
 }

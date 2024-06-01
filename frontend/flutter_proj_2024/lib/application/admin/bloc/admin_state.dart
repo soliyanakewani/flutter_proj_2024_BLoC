@@ -1,3 +1,5 @@
+import 'package:flutter_proj_2024/domain/room/room.dart';
+
 abstract class AdminState {}
 
 class AdminInitial extends AdminState {}
@@ -5,8 +7,8 @@ class AdminInitial extends AdminState {}
 class AdminLoading extends AdminState {}
 
 class AdminLoaded extends AdminState {
-  final List<Map<String, dynamic>> items;
-  AdminLoaded(this.items);
+  final List<Room> rooms;
+  AdminLoaded(this.rooms);
 }
 
 class AdminError extends AdminState {

@@ -1,7 +1,12 @@
+import 'package:equatable/equatable.dart';
 import 'package:flutter_proj_2024/domain/booking/entities/booking.dart';
-// import 'package:flutter_proj_2024/domain/booking/usecases/get_bookings.dart';
 
-abstract class BookingState {}
+abstract class BookingState extends Equatable {
+  const BookingState();
+
+  @override
+  List<Object> get props => [];
+}
 
 class BookingInitial extends BookingState {}
 
@@ -9,22 +14,18 @@ class BookingLoading extends BookingState {}
 
 class BookingLoaded extends BookingState {
   final List<Booking> bookings;
-  BookingLoaded(this.bookings);
+
+  const BookingLoaded(this.bookings);
+
+  @override
+  List<Object> get props => [bookings];
 }
 
 class BookingError extends BookingState {
-  final String errorMessage;
-  BookingError(this.errorMessage);
-}
+  final String message;
 
-class DateSelected extends BookingState {
-  final DateTime selectedDate;
-  DateSelected(this.selectedDate);
-}
+  const BookingError(this.message);
 
-class BookingSuccess extends BookingState {}
-
-class BookingFailure extends BookingState {
-  final String errorMessage;
-  BookingFailure(this.errorMessage);
+  @override
+  List<Object> get props => [message];
 }

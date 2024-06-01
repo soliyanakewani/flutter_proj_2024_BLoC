@@ -1,6 +1,16 @@
+
 import 'package:flutter/material.dart';
-import 'package:flutter_proj_2024/presentation/admin/widgets/appbar.dart';
-import 'package:flutter_proj_2024/presentation/admin/widgets/drawer.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_proj_2024/application/admin/bloc/admin_bloc.dart';
+import 'package:flutter_proj_2024/application/admin/bloc/admin_event.dart';
+import 'package:flutter_proj_2024/application/admin/bloc/admin_state.dart';
+import 'package:flutter_proj_2024/domain/room/room.dart';
+import 'package:flutter_proj_2024/shared/widgets/appbar.dart';
+import 'package:flutter_proj_2024/shared/widgets/drawer.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:convert';
+import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 class AdminPage extends StatefulWidget {
   const AdminPage({Key? key}) : super(key: key);
@@ -11,15 +21,7 @@ class AdminPage extends StatefulWidget {
 
 class _AdminPageState extends State<AdminPage> {
   int _currentImageIndex = 0;
-
-  final List<Map<String, dynamic>> categories = [
-    {
-      'title': 'Deluxe Room',
-      'images': ['lib/assets/images/vip1.jpeg', 'lib/assets/images/vip2.jpeg'],
-      'descriptions': ['A luxurious room with a great view.', 'Spacious and comfortable.'],
-      'prices': [120, 150]
-    },
-  ];
+  File? _selectedImage;
 
   @override
   Widget build(BuildContext context) {
@@ -27,39 +29,73 @@ class _AdminPageState extends State<AdminPage> {
       backgroundColor: const Color.fromARGB(255, 252, 241, 230),
       appBar: AppAppBar(),
       drawer: AppDrawer(),
-      body: SingleChildScrollView(
-        child: Column(
-          children: categories.map((category) {
-            return Column(
-              children: [
-                const SizedBox(height: 20),
-                Text(
-                  category['title'],
-                  style: const TextStyle(
-                    color: Color.fromARGB(255, 95, 65, 65),
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 20),
-                SizedBox(
-                  height: 465,
-                  child: PageView.builder(
-                    itemCount: category['images'].length,
-                    onPageChanged: (index) {
-                      setState(() {
-                        _currentImageIndex = index;
-                      });
-                    },
-                    itemBuilder: (context, index) {
-                      return _buildCard(category, index);
-                    },
-                  ),
-                ),
-              ],
+      body: BlocConsumer<AdminBloc, AdminState>(
+        listener: (context, state) {
+          if (state is AdminError) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Error: ${state.message}')),
             );
-          }).toList(),
-        ),
+          }
+          if (state is ItemDeleted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Item deleted successfully')),
+            );
+          }
+          if (state is ItemAdded) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Item added successfully')),
+            );
+          }
+          if (state is ItemUpdated) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Item updated successfully')),
+            );
+          }
+        },
+        builder: (context, state) {
+          if (state is AdminLoading) {
+            return Center(child: CircularProgressIndicator());
+          } else if (state is AdminLoaded) {
+            return SingleChildScrollView(
+              child: Column(
+                children: state.rooms.map((room) {
+                  return Column(
+                    children: [
+                      const SizedBox(height: 20),
+                      Text(
+                        room.title,
+                        style: const TextStyle(
+                          color: Color.fromARGB(255, 95, 65, 65),
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      SizedBox(
+                        height: 465,
+                        child: PageView.builder(
+                          itemCount: 1, // Only one image per room for now
+                          onPageChanged: (index) {
+                            setState(() {
+                              _currentImageIndex = index;
+                            });
+                          },
+                          itemBuilder: (context, index) {
+                            return _buildCard(room);
+                          },
+                        ),
+                      ),
+                    ],
+                  );
+                }).toList(),
+              ),
+            );
+          } else if (state is AdminError) {
+            return Center(child: Text('Failed to load rooms: ${state.message}'));
+          } else {
+            return Center(child: Text('No rooms found.'));
+          }
+        },
       ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: const Color.fromARGB(255, 252, 241, 230),
@@ -72,7 +108,7 @@ class _AdminPageState extends State<AdminPage> {
     );
   }
 
-  Widget _buildCard(Map<String, dynamic> category, int index) {
+  Widget _buildCard(Room room) {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 40),
       color: const Color.fromARGB(255, 244, 229, 212),
@@ -85,15 +121,36 @@ class _AdminPageState extends State<AdminPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            Image.asset(
-              category['images'][index],
-              height: 200,
-              width: double.infinity,
-              fit: BoxFit.cover,
-            ),
+            if (room.image.isNotEmpty)
+              kIsWeb
+                  ? Image.network(
+                      room.image,
+                      height: 200,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return const Icon(Icons.error);
+                      },
+                    )
+                  : Image.file(
+                      File(room.image),
+                      height: 200,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return const Icon(Icons.error);
+                      },
+                    )
+            else
+              Image.asset(
+                'assets/images/bgc_hotel.jpeg',
+                height: 200,
+                width: double.infinity,
+                fit: BoxFit.cover,
+              ),
             const Divider(color: Color.fromARGB(255, 208, 188, 188)),
             Text(
-              category['descriptions'][index],
+              room.description,
               textAlign: TextAlign.center,
               style: const TextStyle(
                 fontWeight: FontWeight.bold,
@@ -102,7 +159,7 @@ class _AdminPageState extends State<AdminPage> {
               ),
             ),
             Text(
-              'Price: \$${category['prices'][index]}',
+              'Price: \$${room.price}',
               style: const TextStyle(
                 color: Color.fromARGB(255, 95, 65, 65),
                 fontSize: 16,
@@ -113,7 +170,7 @@ class _AdminPageState extends State<AdminPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 ElevatedButton(
-                  onPressed: () => _showEditDialog(context, category, index),
+                  onPressed: () => _showEditDialog(context, room),
                   child: const Text(
                     'Edit',
                     style: TextStyle(color: Colors.blue),
@@ -127,11 +184,7 @@ class _AdminPageState extends State<AdminPage> {
                 const SizedBox(width: 20),
                 ElevatedButton(
                   onPressed: () {
-                    setState(() {
-                      category['images'].removeAt(index);
-                      category['descriptions'].removeAt(index);
-                      category['prices'].removeAt(index);
-                    });
+                    context.read<AdminBloc>().add(DeleteItemEvent(room.id));
                   },
                   child: const Text(
                     'Delete',
@@ -151,128 +204,208 @@ class _AdminPageState extends State<AdminPage> {
     );
   }
 
+  Future<void> _pickImage(Function(XFile) onImagePicked) async {
+    final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      onImagePicked(pickedFile);
+    }
+  }
+
   void _showAddNewDialog(BuildContext context) {
-    TextEditingController titleController = TextEditingController();
-    TextEditingController descriptionController = TextEditingController();
-    TextEditingController priceController = TextEditingController();
-    String? imagePath; // Variable to hold the selected image path
+    final titleController = TextEditingController();
+    final descriptionController = TextEditingController();
+    final priceController = TextEditingController();
+    final categoryController = TextEditingController();
+    XFile? dialogSelectedImage;
 
     showDialog(
       context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: const Color.fromARGB(255, 252, 241, 230),
-          title: const Text('Add New Room Category'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              backgroundColor: const Color.fromARGB(255, 252, 241, 230),
+              title: const Text('Add New Room'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: titleController,
+                      decoration: InputDecoration(labelText: 'Title'),
+                    ),
+                    TextField(
+                      controller: descriptionController,
+                      decoration: InputDecoration(labelText: 'Description'),
+                    ),
+                    TextField(
+                      controller: priceController,
+                      decoration: InputDecoration(labelText: 'Price'),
+                      keyboardType: TextInputType.number,
+                    ),
+                    TextField(
+                      controller: categoryController,
+                      decoration: InputDecoration(labelText: 'Category'),
+                    ),
+                    const SizedBox(height: 10),
+                    ElevatedButton(
+                      onPressed: () async {
+                        await _pickImage((file) {
+                          setState(() {
+                            dialogSelectedImage = file;
+                          });
+                        });
+                      },
+                      child: const Text('Pick Image'),
+                    ),
+                    if (dialogSelectedImage != null)
+                      kIsWeb
+                          ? Image.network(
+                              dialogSelectedImage!.path,
+                              height: 200,
+                            )
+                          : Image.file(
+                              File(dialogSelectedImage!.path),
+                              height: 200,
+                            ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: Text('Cancel'),
+                ),
                 ElevatedButton(
                   onPressed: () async {
-                    // TODO: Implement image picker
+                    if (dialogSelectedImage != null) {
+                      try {
+                        final imageBytes = await dialogSelectedImage!.readAsBytes();
+                        final base64Image = base64Encode(imageBytes);
+
+                        final room = Room(
+                          id: '', // The backend will generate the ID
+                          title: titleController.text,
+                          description: descriptionController.text,
+                          price: double.parse(priceController.text),
+                          image: base64Image,
+                          category: categoryController.text,
+                        );
+                        print('Base64 Image: $base64Image');
+                        print('Room to be added: ${room.toJson()}'); // Debug statement
+                        context.read<AdminBloc>().add(AddItemEvent(room));
+                        Navigator.of(context).pop();
+                      } catch (e) {
+                        print('Error encoding image: $e'); // Debug statement
+                      }
+                    } else {
+                      print('No image selected'); // Debug statement
+                    }
                   },
-                  child: const Text('Select Image'),
-                ),
-                TextField(
-                  controller: titleController,
-                  decoration: const InputDecoration(labelText: 'Category Title'),
-                ),
-                TextField(
-                  controller: descriptionController,
-                  decoration: const InputDecoration(labelText: 'Description'),
-                ),
-                TextField(
-                  controller: priceController,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'Price'),
+                  child: Text('Save'),
                 ),
               ],
-            ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  if (categories.any((category) => category['title'] == titleController.text)) {
-                    final category = categories.firstWhere((cat) => cat['title'] == titleController.text);
-                    category['images'].add(imagePath);
-                    category['descriptions'].add(descriptionController.text);
-                    category['prices'].add(int.parse(priceController.text));
-                  } else {
-                    categories.add({
-                      'title': titleController.text,
-                      'images': [imagePath],
-                      'descriptions': [descriptionController.text],
-                      'prices': [int.parse(priceController.text)],
-                    });
-                  }
-                });
-                Navigator.of(context).pop();
-              },
-              child: const Text('Save'),
-            ),
-          ],
+            );
+          },
         );
       },
     );
   }
 
-  void _showEditDialog(BuildContext context, Map<String, dynamic> category, int index) {
-    TextEditingController categoryName = TextEditingController(text: category['title']);
-    TextEditingController descriptionController = TextEditingController(text: category['descriptions'][index]);
-    TextEditingController priceController = TextEditingController(text: category['prices'][index].toString());
+  void _showEditDialog(BuildContext context, Room room) {
+    final titleController = TextEditingController(text: room.title);
+    final descriptionController = TextEditingController(text: room.description);
+    final priceController = TextEditingController(text: room.price.toString());
+    final categoryController = TextEditingController(text: room.category);
+    XFile? dialogSelectedImage;
 
     showDialog(
       context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: const Color.fromARGB(255, 252, 241, 230),
-          title: const Text('Edit Details'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: categoryName,
-                  decoration: const InputDecoration(labelText: 'Category'),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              backgroundColor: const Color.fromARGB(255, 252, 241, 230),
+              title: const Text('Edit Room'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: titleController,
+                      decoration: InputDecoration(labelText: 'Title'),
+                    ),
+                    TextField(
+                      controller: descriptionController,
+                      decoration: InputDecoration(labelText: 'Description'),
+                    ),
+                    TextField(
+                      controller: priceController,
+                      decoration: InputDecoration(labelText: 'Price'),
+                      keyboardType: TextInputType.number,
+                    ),
+                    TextField(
+                      controller: categoryController,
+                      decoration: InputDecoration(labelText: 'Category'),
+                    ),
+                    const SizedBox(height: 10),
+                    ElevatedButton(
+                      onPressed: () async {
+                        await _pickImage((file) {
+                          setState(() {
+                            dialogSelectedImage = file;
+                          });
+                        });
+                      },
+                      child: const Text('Pick Image'),
+                    ),
+                    if (dialogSelectedImage != null)
+                      kIsWeb
+                          ? Image.network(
+                              dialogSelectedImage!.path,
+                              height: 200,
+                            )
+                          : Image.file(
+                              File(dialogSelectedImage!.path),
+                              height: 200,
+                            ),
+                  ],
                 ),
-                TextField(
-                  controller: descriptionController,
-                  decoration: const InputDecoration(labelText: 'Description'),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: Text('Cancel'),
                 ),
-                TextField(
-                  controller: priceController,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'Price'),
+                ElevatedButton(
+                  onPressed: () async {
+                    try {
+                      final updatedRoom = Room(
+                        id: room.id,
+                        title: titleController.text,
+                        description: descriptionController.text,
+                        price: double.parse(priceController.text),
+                        category: categoryController.text,
+                        image: dialogSelectedImage != null
+                            ? base64Encode(await dialogSelectedImage!.readAsBytes())
+                            : room.image,
+                      );
+                      print('Updated Room: ${updatedRoom.toJson()}'); // Debug statement
+                      context.read<AdminBloc>().add(UpdateItemEvent(updatedRoom));
+                      Navigator.of(context).pop();
+                    } catch (e) {
+                      print('Error updating room: $e'); // Debug statement
+                    }
+                  },
+                  child: Text('Save'),
                 ),
               ],
-            ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  category['title'] = categoryName.text;
-                  category['descriptions'][index] = descriptionController.text;
-                  category['prices'][index] = int.parse(priceController.text);
-                });
-                Navigator.of(context).pop();
-              },
-              child: const Text('Save'),
-            ),
-          ],
+            );
+          },
         );
       },
     );

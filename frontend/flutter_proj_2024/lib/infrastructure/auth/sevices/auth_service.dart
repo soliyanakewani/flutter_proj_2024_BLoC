@@ -1,6 +1,5 @@
 import 'package:mongo_dart/mongo_dart.dart' as mongo;
 import 'package:dart_jsonwebtoken/dart_jsonwebtoken.dart';
-// import 'package:crypto/crypto.dart';
 import 'package:bcrypt/bcrypt.dart';
 import 'dart:convert';
 
@@ -29,7 +28,7 @@ class AuthService {
 
     final id = user['_id'];
     
-      final token = JWT(
+    final token = JWT(
       {
         'id': id,
         'role': user['role'],
@@ -44,11 +43,9 @@ class AuthService {
     final email = loginDto['email'];
     final password = loginDto['password'];
 
-    
     if (email == null || password == null) {
       throw Exception('Email or password is null.');
     }
-
 
     final user = await userCollection.findOne(mongo.where.eq('email', email));
     if (user == null) {
@@ -72,28 +69,30 @@ class AuthService {
   }
 
   Future<bool> isAuthenticated(String? token) async {
-    if (token == null){
-      return false;
-    }
-  try {
-    final parts = token.split('.');
-    if (parts.length != 3) {
+    if (token == null) {
       return false;
     }
 
-    final payload = parts[1];
-    final normalized = base64Url.normalize(payload);
-    final decoded = utf8.decode(base64Url.decode(normalized));
-    final decodedToken = json.decode(decoded);
+    try {
+      final parts = token.split('.');
+      if (parts.length != 3) {
+        return false;
+      }
 
-    final expiry = decodedToken['exp'] as int;
-    final currentTimeInSeconds = DateTime.now().millisecondsSinceEpoch ~/ 1000;
-    return expiry > currentTimeInSeconds;
-  } catch (e) {
-    return false;
+      final payload = parts[1];
+      final normalized = base64Url.normalize(payload);
+      final decoded = utf8.decode(base64Url.decode(normalized));
+      final decodedToken = json.decode(decoded);
+
+      final expiry = decodedToken['exp'] as int;
+      final currentTimeInSeconds = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+      return expiry > currentTimeInSeconds;
+    } catch (e) {
+      return false;
+    }
   }
-}
-   Future<Map<String, dynamic>> getCurrentUser(String token) async {
+
+  Future<Map<String, dynamic>> getCurrentUser(String token) async {
     try {
       final parts = token.split('.');
       final payload = parts[1];
@@ -110,8 +109,9 @@ class AuthService {
     } catch (e) {
       throw Exception('Error retrieving user: ${e.toString()}');
     }
-  } 
-   Future<void> signOut() async {
+  }
+
+  Future<void> signOut() async {
     // Implement sign out logic if necessary, e.g., remove token from storage
   }
 
@@ -119,4 +119,4 @@ class AuthService {
     // Implement logic to retrieve token from storage
     return null;
   }
-} 
+}

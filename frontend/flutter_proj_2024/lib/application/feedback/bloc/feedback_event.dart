@@ -1,5 +1,6 @@
+
 import 'package:equatable/equatable.dart';
-import 'package:flutter_proj_2024/domain/feedback/entities/feedback.dart' as CustomFeedback;
+
 
 abstract class FeedbackEvent extends Equatable {
   const FeedbackEvent();
@@ -8,13 +9,36 @@ abstract class FeedbackEvent extends Equatable {
   List<Object> get props => [];
 }
 
-class SubmitFeedbackEvent extends FeedbackEvent {
-  final CustomFeedback.Feedback feedback;
+class FetchFeedback extends FeedbackEvent {}
 
-  const SubmitFeedbackEvent(this.feedback);
+class PostFeedback extends FeedbackEvent {
+  final String customerName;
+  final String message;
+  final int rating;
+
+  const PostFeedback(this.customerName, this.message, this.rating);
 
   @override
-  List<Object> get props => [feedback];
+  List<Object> get props => [customerName, message, rating];
 }
 
-class LoadFeedbackEvent extends FeedbackEvent {}
+class UpdateFeedback extends FeedbackEvent {
+  final String id;
+  final String customerName;
+  final String message;
+  final int rating;
+
+  const UpdateFeedback(this.id, this.customerName, this.message, this.rating);
+
+  @override
+  List<Object> get props => [id, customerName, message, rating];
+}
+
+class DeleteFeedback extends FeedbackEvent {
+  final String id;
+
+  const DeleteFeedback(this.id);
+
+  @override
+  List<Object> get props => [id];
+}

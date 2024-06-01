@@ -4,6 +4,7 @@ import 'package:flutter_proj_2024/application/auth/bloc/auth_bloc.dart';
 import 'package:flutter_proj_2024/application/auth/bloc/auth_event.dart';
 import 'package:flutter_proj_2024/application/auth/bloc/auth_state.dart';
 import 'package:flutter_proj_2024/shared/widgets/text_field_widget.dart';
+import 'package:go_router/go_router.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -74,7 +75,7 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 GestureDetector(
                   onTap: () {
-                    Navigator.pushNamed(context, '/');
+                    context.go( '/');
                   },
                   child: const Text(
                     'SIGN UP',
@@ -94,9 +95,9 @@ class _LoginPageState extends State<LoginPage> {
                 if (state is AuthSuccess) {
                   print('Navigating based on role: ${state.role}');
                   if (state.role == 'admin') {
-                    Navigator.pushNamed(context, '/admin_page');
+                    context.go( '/admin_page');
                   } else if (state.role == 'customer') {
-                    Navigator.pushNamed(context, '/booking_page');
+                    context.go('/home_page');
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text('This account doesn\'t exist')),
@@ -105,7 +106,7 @@ class _LoginPageState extends State<LoginPage> {
                 } else if (state is AuthFailure) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('Login Failed: ${state.errorMessage}')),
-                  );
+                                      );
                 }
               },
               builder: (context, state) {

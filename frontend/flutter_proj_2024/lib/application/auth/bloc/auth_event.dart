@@ -26,3 +26,7 @@ class SignUpRequested extends AuthEvent {
   @override
   List<Object> get props => [name, email, password, isAdmin];
 }
+
+class LoggedOut extends AuthEvent {}
+
+class AppStarted extends AuthEvent {}

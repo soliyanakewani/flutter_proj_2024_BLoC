@@ -1,40 +1,31 @@
-import 'package:equatable/equatable.dart';
-
-class Feedback extends Equatable {
-  final String id;
-  final String customerName;
+  class AppFeedback {
+  final String? id;
+  final String user;
   final String message;
-  final int rating;  // Ensure this is included
-  final DateTime createdAt;
+  final int rating;
 
-  const Feedback({
-    required this.id,
-    required this.customerName,
+  AppFeedback({
+    this.id,
+    required this.user,
     required this.message,
-    required this.rating,  // Ensure this is included
-    required this.createdAt,
+    required this.rating,
   });
 
-  @override
-  List<Object?> get props => [id, customerName, message, rating, createdAt];
-
-  factory Feedback.fromJson(Map<String, dynamic> json) {
-    return Feedback(
-      id: json['id'] as String,
-      customerName: json['customerName'] as String,
-      message: json['message'] as String,
-      rating: json['rating'] as int,  // Ensure this is included
-      createdAt: DateTime.parse(json['createdAt'] as String),
+  factory AppFeedback.fromJson(Map<String, dynamic> json) {
+    return AppFeedback(
+      id: json['_id'],
+      user: json['customerName'],
+      message: json['message'],
+      rating: json['rating'],
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
-      'customerName': customerName,
+      '_id': id,
+      'customerName': user,
       'message': message,
-      'rating': rating,  // Ensure this is included
-      'createdAt': createdAt.toIso8601String(),
+      'rating': rating,
     };
   }
 }

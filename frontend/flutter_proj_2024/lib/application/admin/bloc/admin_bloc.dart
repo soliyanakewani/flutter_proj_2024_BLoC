@@ -3,48 +3,57 @@ import 'admin_event.dart';
 import 'admin_state.dart';
 import 'package:flutter_proj_2024/domain/admin/repositories/admin_repository.dart';
 
+
 class AdminBloc extends Bloc<AdminEvent, AdminState> {
   final AdminRepository adminRepository;
 
-  AdminBloc(this.adminRepository) : super(AdminInitial());
+  AdminBloc(this.adminRepository) : super(AdminInitial()) {
+    on<LoadItemsEvent>((event, emit) async {
+      emit(AdminLoading());
+      try {
+        final rooms = await adminRepository.loadItems();
+        emit(AdminLoaded(rooms));
+        print('Items loaded successfully');
+      } catch (e) {
+        emit(AdminError(e.toString()));
+        print('Error loading items: $e');
+      }
+    });
 
-  @override
-  Stream<AdminState> mapEventToState(AdminEvent event) async* {
-    if (event is LoadItemsEvent) {
-      yield AdminLoading();
+    on<AddItemEvent>((event, emit) async {
+      print('Adding item: ${event.room}');
       try {
-        final items = await adminRepository.loadItems();
-        yield AdminLoaded(items);
-      } catch (e) {
-        yield AdminError(e.toString());
-      }
-    } else if (event is AddItemEvent) {
-      yield AdminLoading();
-      try {
-        await adminRepository.addItem(event.item);
-        yield ItemAdded();
+        await adminRepository.addItem(event.room);
+        emit(ItemAdded());
         add(LoadItemsEvent()); // Refresh the items list
       } catch (e) {
-        yield AdminError(e.toString());
+        emit(AdminError(e.toString()));
+        print('Error adding item: $e');
       }
-    } else if (event is UpdateItemEvent) {
-      yield AdminLoading();
+    });
+
+    on<UpdateItemEvent>((event, emit) async {
+      print('Updating item: ${event.room}');
       try {
-        await adminRepository.updateItem(event.item);
-        yield ItemUpdated();
+        await adminRepository.updateItem(event.room);
+        emit(ItemUpdated());
         add(LoadItemsEvent()); // Refresh the items list
       } catch (e) {
-        yield AdminError(e.toString());
+        emit(AdminError(e.toString()));
+        print('Error updating item: $e');
       }
-    } else if (event is DeleteItemEvent) {
-      yield AdminLoading();
+    });
+
+    on<DeleteItemEvent>((event, emit) async {
+      print('Deleting item: ${event.roomId}');
       try {
-        await adminRepository.deleteItem(event.itemId);
-        yield ItemDeleted();
+        await adminRepository.deleteItem(event.roomId);
+        emit(ItemDeleted());
         add(LoadItemsEvent()); // Refresh the items list
       } catch (e) {
-        yield AdminError(e.toString());
+        emit(AdminError(e.toString()));
+        print('Error deleting item: $e');
       }
-    }
+    });
   }
 }

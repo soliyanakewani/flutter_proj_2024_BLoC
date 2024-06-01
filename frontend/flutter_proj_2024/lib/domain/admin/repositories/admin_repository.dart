@@ -1,6 +1,8 @@
+import 'package:flutter_proj_2024/domain/room/room.dart';
+
 abstract class AdminRepository {
-  Future<List<Map<String, dynamic>>> loadItems();
-  Future<void> addItem(Map<String, dynamic> item);
-  Future<void> updateItem(Map<String, dynamic> item);
-  Future<void> deleteItem(String itemId);
+  Future<List<Room>> loadItems();
+  Future<void> addItem(Room room);
+  Future<void> updateItem(Room room);
+  Future<void> deleteItem(String roomId);
 }

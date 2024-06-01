@@ -1,5 +1,3 @@
-// booking_local_data_source.dart
-
 import 'package:flutter_proj_2024/domain/booking/entities/booking.dart';
 import 'package:mongo_dart/mongo_dart.dart';
 
@@ -18,13 +16,21 @@ class BookingLocalDataSource {
   }
 
   Future<void> updateBooking(Booking booking) async {
-    await bookingCollection.update(
-      where.eq('_id', booking.id), // Assuming 'id' is the document ID field
-      booking.toJson(),
-    );
+    if (booking.id != null) {
+      await bookingCollection.update(
+        where.eq('_id', ObjectId.fromHexString(booking.id!)), // Use null check
+        booking.toJson(),
+      );
+    } else {
+      throw ArgumentError('Booking id cannot be null');
+    }
   }
 
   Future<void> deleteBooking(Booking booking) async {
-    await bookingCollection.deleteOne(where.eq('_id', booking.id));
+    if (booking.id != null) {
+      await bookingCollection.deleteOne(where.eq('_id', ObjectId.fromHexString(booking.id!))); // Use null check
+    } else {
+      throw ArgumentError('Booking id cannot be null');
+    }
   }
 }

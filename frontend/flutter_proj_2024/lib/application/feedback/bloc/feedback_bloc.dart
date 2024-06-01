@@ -1,41 +1,66 @@
-import 'package:bloc/bloc.dart';
-import 'package:flutter_proj_2024/domain/feedback/entities/feedback.dart' as CustomFeedback;
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_proj_2024/domain/feedback/entities/feedback.dart';
+import 'package:flutter_proj_2024/application/feedback/bloc/feedback_event.dart';
+import 'package:flutter_proj_2024/application/feedback/bloc/feedback_state.dart';
 import 'package:flutter_proj_2024/domain/feedback/repositories/feedback_repository.dart';
-import 'feedback_event.dart';
-import 'feedback_state.dart';
 
 class FeedbackBloc extends Bloc<FeedbackEvent, FeedbackState> {
   final FeedbackRepository feedbackRepository;
 
-  FeedbackBloc({required this.feedbackRepository}) : super(FeedbackInitial()) {
-    on<SubmitFeedbackEvent>(_onSubmitFeedbackEvent);
-    on<LoadFeedbackEvent>(_onLoadFeedbackEvent);
+  FeedbackBloc(this.feedbackRepository) : super(FeedbackInitial()) {
+    on<FetchFeedback>(_onFetchFeedback);
+    on<PostFeedback>(_onPostFeedback);
+    on<UpdateFeedback>(_onUpdateFeedback);
+    on<DeleteFeedback>(_onDeleteFeedback);
   }
 
-  Future<void> _onSubmitFeedbackEvent(
-    SubmitFeedbackEvent event,
-    Emitter<FeedbackState> emit,
-  ) async {
+  void _onFetchFeedback(FetchFeedback event, Emitter<FeedbackState> emit) async {
     emit(FeedbackLoading());
     try {
-      await feedbackRepository.submitFeedback(event.feedback);
-      final feedbackList = await feedbackRepository.getFeedbackList();
-      emit(FeedbackLoadSuccess(feedbackList));
+      final feedbackList = await feedbackRepository.fetchFeedback();
+      emit(FeedbackLoaded(feedbackList));
     } catch (e) {
-      emit(FeedbackFailure(e.toString()));
+      emit(FeedbackError('Failed to fetch feedback'));
     }
   }
 
-  Future<void> _onLoadFeedbackEvent(
-    LoadFeedbackEvent event,
-    Emitter<FeedbackState> emit,
-  ) async {
-    emit(FeedbackLoading());
+  void _onPostFeedback(PostFeedback event, Emitter<FeedbackState> emit) async {
     try {
-      final feedbackList = await feedbackRepository.getFeedbackList();
-      emit(FeedbackLoadSuccess(feedbackList));
+      await feedbackRepository.postFeedback(
+        AppFeedback(
+          user: event.customerName,
+          message: event.message,
+          rating: event.rating,
+        ),
+      );
+      add(FetchFeedback());
     } catch (e) {
-      emit(FeedbackFailure(e.toString()));
+      emit(FeedbackError('Failed to post feedback'));
+    }
+  }
+
+  void _onUpdateFeedback(UpdateFeedback event, Emitter<FeedbackState> emit) async {
+    try {
+      await feedbackRepository.updateFeedback(
+        AppFeedback(
+          id: event.id,
+          user: event.customerName,
+          message: event.message,
+          rating: event.rating,
+        ),
+      );
+      add(FetchFeedback());
+    } catch (e) {
+      emit(FeedbackError('Failed to update feedback'));
+    }
+  }
+
+  void _onDeleteFeedback(DeleteFeedback event, Emitter<FeedbackState> emit) async {
+    try {
+      await feedbackRepository.deleteFeedback(event.id);
+      add(FetchFeedback());
+    } catch (e) {
+      emit(FeedbackError('Failed to delete feedback'));
     }
   }
 }

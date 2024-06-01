@@ -21,7 +21,11 @@ class AuthApi {
       Map<String, dynamic> responseBody = jsonDecode(response.body);
       String token = responseBody['token'];
       Map<String, dynamic> decodedToken = JwtDecoder.decode(token);
-      return {'token': token, 'role': decodedToken['role']};
+      return {
+        'token': token,
+        'role': decodedToken['role'],
+        'name': decodedToken['name']
+      };
     } else {
       throw Exception('Failed to login: ${response.statusCode} - ${response.body}');
     }
@@ -46,9 +50,28 @@ class AuthApi {
       Map<String, dynamic> responseBody = jsonDecode(response.body);
       String token = responseBody['token'];
       Map<String, dynamic> decodedToken = JwtDecoder.decode(token);
-      return {'token': token, 'role': decodedToken['role']};
+      return {
+        'token': token,
+        'role': decodedToken['role'],
+        'name': decodedToken['name']
+      };
     } else {
       throw Exception('Failed to sign up: ${response.statusCode} - ${response.body}');
+    }
+  }
+
+  Future<void> logout() async {
+    // Implement logout logic if needed (e.g., call an API endpoint to invalidate the session)
+    final response = await http.post(
+      Uri.parse('$baseUrl/auth/logout'),
+      headers: <String, String>{'Content-Type': 'application/json'},
+    );
+
+    print('Logout response status: ${response.statusCode}');
+    print('Logout response body: ${response.body}');
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to logout: ${response.statusCode} - ${response.body}');
     }
   }
 }

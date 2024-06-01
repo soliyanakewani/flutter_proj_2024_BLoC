@@ -1,9 +1,12 @@
+
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_proj_2024/application/auth/bloc/auth_bloc.dart';
 import 'package:flutter_proj_2024/application/auth/bloc/auth_event.dart';
 import 'package:flutter_proj_2024/application/auth/bloc/auth_state.dart';
 import 'package:flutter_proj_2024/shared/widgets/text_field_widget.dart';
+import 'package:go_router/go_router.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -96,7 +99,7 @@ class _SignUpPageState extends State<SignUpPage> {
                 ),
                 GestureDetector(
                   onTap: () {
-                    Navigator.pushNamed(context, '/login');
+                    context.go('/login'); // Use context.go to navigate to the login page
                   },
                   child: const Text(
                     'LOG IN',
@@ -116,7 +119,7 @@ class _SignUpPageState extends State<SignUpPage> {
                 print('AuthState: $state'); // Debug print statement
                 if (state is AuthSuccess) {
                   print('Navigating to login'); // Add this print statement
-                  Navigator.pushNamed(context, '/login'); // Navigate to the login page
+                  context.go('/login'); // Navigate to the login page
                 } else if (state is AuthFailure) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('Sign Up Failed: ${state.errorMessage}')),

@@ -1,6 +1,7 @@
 import { User } from "src/auth/user/schemas/user.schema";
-import { Category } from "../schemas/room.schema"
-import {IsOptional ,IsString,IsNumber,IsEnum, IsEmpty} from "class-validator";
+import { Category } from "../schemas/room.schema";
+import { IsOptional, IsString, IsNumber, IsEnum, IsEmpty } from "class-validator";
+
 export class UpdateRoomDto {
     @IsOptional()
     @IsString()
